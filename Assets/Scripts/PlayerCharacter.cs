@@ -18,35 +18,40 @@ public class PlayerCharacter : MonoBehaviour
 
     [SerializeField] private Animator anim;
     [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private Rigidbody2D body;
+    [SerializeField] private PlayerFoot foot;
 
     private const float DeadZone = 0.1f;
+    private const float MoveSpeed = 2.0f;
 
     private bool facingRight_ = true;
-    // Start is called before the first frame update
+
     void Start()
     {
-        ChangeState(State.Idle);
+        ChangeState(State.Jump);
     }
-
-    // Update is called once per frame
-    void Update()
+    
+    void FixedUpdate()
     {
-        float move = 0.0f;
+        float moveDir = 0.0f;
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            move -= 1.0f;
+            moveDir -= 1.0f;
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            move += 1.0f;
+            moveDir += 1.0f;
         }
+
+        var vel = body.velocity;
+        body.velocity = new Vector2(MoveSpeed * moveDir, vel.y);
         //We flip the characters when not facing in the right direction
-        if (move > DeadZone && !facingRight_)
+        if (moveDir > DeadZone && !facingRight_)
         {
             Flip();
         }
 
-        if (move < -DeadZone && facingRight_)
+        if (moveDir < -DeadZone && facingRight_)
         {
             Flip();
         }
@@ -54,18 +59,32 @@ public class PlayerCharacter : MonoBehaviour
         switch (currentState_)
         {
             case State.Idle:
-                if (Mathf.Abs(move) > DeadZone)
+                if (Mathf.Abs(moveDir) > DeadZone)
                 {
                     ChangeState(State.Walk);
                 }
+
+                if (foot.FootContact == 0)
+                {
+                    ChangeState(State.Jump);
+                }
                 break;
             case State.Walk:
-                if (Mathf.Abs(move) < DeadZone)
+                if (Mathf.Abs(moveDir) < DeadZone)
                 {
                     ChangeState(State.Idle);
                 }
+
+                if (foot.FootContact == 0)
+                {
+                    ChangeState(State.Jump);
+                }
                 break;
             case State.Jump:
+                if (foot.FootContact > 0)
+                {
+                    ChangeState(State.Idle);
+                }
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
