@@ -23,14 +23,24 @@ public class PlayerCharacter : MonoBehaviour
 
     private const float DeadZone = 0.1f;
     private const float MoveSpeed = 2.0f;
+    private const float JumpSpeed = 5.0f;
 
     private bool facingRight_ = true;
+    private bool jumpButtonDown_ = false;
 
     void Start()
     {
         ChangeState(State.Jump);
     }
-    
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpButtonDown_ = true;
+        }
+    }
+
     void FixedUpdate()
     {
         float moveDir = 0.0f;
@@ -42,6 +52,12 @@ public class PlayerCharacter : MonoBehaviour
         {
             moveDir += 1.0f;
         }
+
+        if (foot.FootContact > 0 && jumpButtonDown_)
+        {
+            Jump();
+        }
+        jumpButtonDown_ = false;
 
         var vel = body.velocity;
         body.velocity = new Vector2(MoveSpeed * moveDir, vel.y);
@@ -89,6 +105,12 @@ public class PlayerCharacter : MonoBehaviour
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    private void Jump()
+    {
+        var vel = body.velocity;
+        body.velocity = new Vector2(vel.x, JumpSpeed);
     }
 
     void ChangeState(State state)
